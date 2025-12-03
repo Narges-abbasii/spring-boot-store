@@ -10,6 +10,8 @@ import com.codewithmosh.store.repositories.UserRepository;
 import lombok.AllArgsConstructor;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.*;
@@ -26,6 +28,7 @@ import java.util.Set;
 public class UserController {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final PasswordEncoder passwordEncoder;
 
     @GetMapping
 //    public Iterable<UserDto> getAllUsers(@RequestHeader(required = false, name = "x-auth-token") String authToken, @RequestParam(required = false, defaultValue = "", name = "sort") String sortBy)
@@ -56,6 +59,7 @@ public class UserController {
             return ResponseEntity.badRequest().body(Map.of("email", "Email is already registered."));
         }
         var user = userMapper.toEntity(request);
+        user.setPassword(passwordEncoder.encode(user.getPassword()));
         userRepository.save(user);
         var userDto = userMapper.toDto(user);
         var uri = uriBuilder.path("/users/{id}").buildAndExpand(userDto.getId()).toUri();
